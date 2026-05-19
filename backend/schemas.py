@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 from typing import Optional
 from pydantic import BaseModel, EmailStr
 from decimal import Decimal
@@ -62,6 +62,8 @@ class ProductUpdate(BaseModel):
 
 class StockAdjustRequest(BaseModel):
     adjustment: int  # positive = add, negative = remove
+    transaction_type: str = "adjustment"
+    unit_price: Optional[Decimal] = None
 
 
 class StockAdjustResponse(BaseModel):
@@ -79,5 +81,57 @@ class TransactionOut(BaseModel):
     adjustment: int
     new_total: int
     timestamp: datetime
+    transaction_type: str
+    unit_price: Optional[Decimal]
+    product_name: Optional[str] = None
 
     model_config = {"from_attributes": True}
+
+
+# ── Checkout ──────────────────────────────────────────────────────────────────
+
+class CheckoutItem(BaseModel):
+    product_id: int
+    quantity: int
+
+
+class CheckoutRequest(BaseModel):
+    items: list[CheckoutItem]
+
+
+class CheckoutResponseItem(BaseModel):
+    product_id: int
+    product_name: str
+    quantity: int
+    unit_price: Decimal
+    subtotal: Decimal
+    new_stock: int
+
+
+class CheckoutResponse(BaseModel):
+    items: list[CheckoutResponseItem]
+    total_amount: Decimal
+
+
+# ── Analytics ─────────────────────────────────────────────────────────────────
+
+class TopProduct(BaseModel):
+    product_id: int
+    name: str
+    qty_sold: int
+    revenue: Decimal
+
+
+class DailyBreakdown(BaseModel):
+    date: str
+    income: Decimal
+    items_sold: int
+
+
+class AnalyticsSummary(BaseModel):
+    income_this_month: Decimal
+    items_sold_this_month: int
+    income_all_time: Decimal
+    items_sold_all_time: int
+    top_products: list[TopProduct]
+    daily_breakdown: list[DailyBreakdown]

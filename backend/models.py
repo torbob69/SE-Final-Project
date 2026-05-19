@@ -43,6 +43,8 @@ class Transaction(Base):
     adjustment = Column(Integer, nullable=False)
     new_total = Column(Integer, nullable=False)
     timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
+    transaction_type = Column(Enum("sale", "adjustment"), nullable=False, default="adjustment")
+    unit_price = Column(DECIMAL(10, 2), nullable=True)
 
     user = relationship("User", back_populates="transactions")
     product = relationship("Product", back_populates="transactions")

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import auth, products, stock, transactions, users
+from routers import auth, products, stock, transactions, users, checkout, analytics
 
 app = FastAPI(title="StockSync API", version="1.0.0")
 
@@ -17,6 +17,8 @@ app.include_router(products.router)
 app.include_router(stock.router)
 app.include_router(transactions.router)
 app.include_router(users.router)
+app.include_router(checkout.router)
+app.include_router(analytics.router)
 
 
 @app.get("/health")
