@@ -1,1 +1,57 @@
 @import "tailwindcss";
+
+@theme {
+  /* MD3 colour roles — blue primary palette */
+  --color-primary: #1d4ed8;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #dbeafe;
+  --color-on-primary-container: #1e3a8a;
+
+  --color-secondary: #0891b2;
+  --color-on-secondary: #ffffff;
+
+  --color-surface: #f8fafc;
+  --color-on-surface: #0f172a;
+  --color-surface-variant: #e2e8f0;
+  --color-on-surface-variant: #475569;
+
+  --color-error: #dc2626;
+  --color-on-error: #ffffff;
+  --color-error-container: #fee2e2;
+  --color-on-error-container: #7f1d1d;
+
+  --color-success: #16a34a;
+  --color-on-success: #ffffff;
+  --color-success-container: #dcfce7;
+
+  --color-warning: #d97706;
+  --color-warning-container: #fef3c7;
+
+  --color-outline: #94a3b8;
+  --color-background: #ffffff;
+  --color-on-background: #0f172a;
+
+  /* Typography scale */
+  --font-sans: 'Inter', 'Roboto', system-ui, sans-serif;
+
+  /* Touch-safe minimum */
+  --spacing-touch: 3rem; /* 48px */
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-background);
+  color: var(--color-on-background);
+  overscroll-behavior: none;
+}
+
+/* Prevent iOS bounce on fixed overlays */
+.no-scroll {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+}

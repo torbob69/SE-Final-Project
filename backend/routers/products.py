@@ -44,6 +44,14 @@ def get_by_barcode(
     return product
 
 
+@router.get("/generate-barcode", response_model=dict)
+def generate_barcode(
+    db: Session = Depends(get_db),
+    _: models.User = Depends(require_admin),
+):
+    return {"barcode": _generate_barcode(db)}
+
+
 @router.get("/{product_id}", response_model=schemas.ProductOut)
 def get_product(
     product_id: int,
@@ -69,14 +77,6 @@ def create_product(
     db.commit()
     db.refresh(product)
     return product
-
-
-@router.get("/generate-barcode", response_model=dict)
-def generate_barcode(
-    db: Session = Depends(get_db),
-    _: models.User = Depends(require_admin),
-):
-    return {"barcode": _generate_barcode(db)}
 
 
 @router.patch("/{product_id}", response_model=schemas.ProductOut)
