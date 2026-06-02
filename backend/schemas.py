@@ -56,6 +56,7 @@ class ProductUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
     base_price: Optional[Decimal] = None
+    is_archived: Optional[bool] = None
 
 
 # ── Stock Adjustment ──────────────────────────────────────────────────────────

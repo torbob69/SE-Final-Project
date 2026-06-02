@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { listProducts, createProduct, archiveProduct, generateBarcode } from '../../api/products'
+import { listProducts, createProduct, updateProduct, archiveProduct, generateBarcode } from '../../api/products'
 import { useToast } from '../../context/ToastContext'
 import Layout from '../../components/Layout'
 
@@ -64,6 +64,16 @@ export default function AdminConsole() {
       load()
     } catch {
       showToast('Failed to archive product', 'error')
+    }
+  }
+
+  async function handleUnarchive(product) {
+    try {
+      await updateProduct(product.id, { is_archived: false })
+      showToast(`"${product.name}" restored`, 'success')
+      load()
+    } catch {
+      showToast('Failed to restore product', 'error')
     }
   }
 
@@ -143,7 +153,8 @@ export default function AdminConsole() {
               {filtered.map((p) => (
                 <MobileProductRow key={p.id} product={p}
                   onView={() => navigate(`/product/${p.id}`, { state: { product: p } })}
-                  onArchive={() => handleArchive(p)} />
+                  onArchive={() => handleArchive(p)}
+                  onUnarchive={() => handleUnarchive(p)} />
               ))}
             </div>
 
@@ -188,7 +199,12 @@ export default function AdminConsole() {
                         )}
                       </td>
                       <td className="px-4 py-3 text-right">
-                        {!p.is_archived && (
+                        {p.is_archived ? (
+                          <button onClick={() => handleUnarchive(p)}
+                            className="text-xs text-primary border border-primary rounded-lg px-3 py-1.5 hover:bg-primary-container transition-colors">
+                            Restore
+                          </button>
+                        ) : (
                           <button onClick={() => handleArchive(p)}
                             className="text-xs text-error border border-error rounded-lg px-3 py-1.5 hover:bg-error-container transition-colors">
                             Archive
@@ -207,7 +223,7 @@ export default function AdminConsole() {
   )
 }
 
-function MobileProductRow({ product: p, onView, onArchive }) {
+function MobileProductRow({ product: p, onView, onArchive, onUnarchive }) {
   return (
     <div className={`bg-surface border rounded-xl p-3 flex items-center justify-between gap-2
       ${p.is_archived ? 'border-outline opacity-50' : 'border-surface-variant'}`}>
@@ -219,7 +235,12 @@ function MobileProductRow({ product: p, onView, onArchive }) {
           {p.is_archived && <span className="ml-2 text-outline">[archived]</span>}
         </p>
       </button>
-      {!p.is_archived && (
+      {p.is_archived ? (
+        <button onClick={onUnarchive}
+          className="text-xs text-primary border border-primary rounded-lg px-2 py-1 min-h-[40px] min-w-[60px] active:bg-primary-container">
+          Restore
+        </button>
+      ) : (
         <button onClick={onArchive}
           className="text-xs text-error border border-error rounded-lg px-2 py-1 min-h-[40px] min-w-[60px] active:bg-error-container">
           Archive
