@@ -18,6 +18,8 @@ export default function Scanner() {
   const [scanning, setScanning] = useState(false)
   const [cameraError, setCameraError] = useState(null)
   const [scanKey, setScanKey] = useState(0)
+  const [manualInput, setManualInput] = useState('')
+  const [isLookingUp, setIsLookingUp] = useState(false)
 
   const handleBarcode = useCallback(async (barcode) => {
     try {
@@ -37,6 +39,16 @@ export default function Scanner() {
       setScanKey((k) => k + 1)
     }
   }, [mode, addItem, navigate, showToast])
+
+  async function handleManualSubmit(e) {
+    e.preventDefault()
+    const val = manualInput.trim()
+    if (!val || isLookingUp) return
+    setManualInput('')
+    setIsLookingUp(true)
+    await handleBarcode(val)
+    setIsLookingUp(false)
+  }
 
   useEffect(() => {
     if (!videoRef.current) return
@@ -174,14 +186,32 @@ export default function Scanner() {
           )}
         </div>
 
-        <div className="px-4 py-3 bg-surface text-center">
-          <p className="text-sm text-on-surface-variant">
+        <div className="px-4 pt-3 pb-4 bg-surface space-y-2">
+          <p className="text-xs text-center text-on-surface-variant">
             {scanning
-              ? mode === 'Cashier'
-                ? 'Scan item to add to cart…'
-                : 'Point camera at a barcode…'
+              ? mode === 'Cashier' ? 'Scan item to add to cart…' : 'Point camera at a barcode…'
               : 'Initializing camera…'}
           </p>
+
+          {/* Manual barcode entry fallback */}
+          <form onSubmit={handleManualSubmit} className="flex gap-2">
+            <input
+              type="text"
+              value={manualInput}
+              onChange={(e) => setManualInput(e.target.value)}
+              placeholder="Enter barcode manually…"
+              className="flex-1 bg-surface-variant text-on-surface rounded-xl px-4 py-2.5 text-sm
+                placeholder:text-on-surface-variant/50 outline-none focus:ring-2 focus:ring-primary min-h-[48px]"
+            />
+            <button
+              type="submit"
+              disabled={!manualInput.trim() || isLookingUp}
+              className="bg-primary text-on-primary px-4 rounded-xl font-semibold text-sm min-h-[48px]
+                disabled:opacity-40 active:scale-95 transition-transform"
+            >
+              {isLookingUp ? '…' : 'Go'}
+            </button>
+          </form>
         </div>
       </div>
     </Layout>
