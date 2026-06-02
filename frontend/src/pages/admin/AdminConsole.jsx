@@ -5,6 +5,7 @@ import { useToast } from '../../context/ToastContext'
 import Layout from '../../components/Layout'
 
 const EMPTY_FORM = { name: '', description: '', base_price: '', stock: '0', barcode: '' }
+const EMPTY_EDIT = { name: '', description: '', base_price: '' }
 
 export default function AdminConsole() {
   const [products, setProducts] = useState([])
@@ -13,6 +14,9 @@ export default function AdminConsole() {
   const [form, setForm] = useState(EMPTY_FORM)
   const [submitting, setSubmitting] = useState(false)
   const [search, setSearch] = useState('')
+  const [editingProduct, setEditingProduct] = useState(null)
+  const [editForm, setEditForm] = useState(EMPTY_EDIT)
+  const [editSubmitting, setEditSubmitting] = useState(false)
   const { showToast } = useToast()
   const navigate = useNavigate()
 
@@ -28,6 +32,22 @@ export default function AdminConsole() {
   )
 
   function setField(key, val) { setForm((prev) => ({ ...prev, [key]: val })) }
+  function setEditField(key, val) { setEditForm((prev) => ({ ...prev, [key]: val })) }
+
+  function openEdit(product) {
+    setEditingProduct(product)
+    setEditForm({
+      name: product.name,
+      description: product.description ?? '',
+      base_price: product.base_price != null ? String(product.base_price) : '',
+    })
+    setShowForm(false)
+  }
+
+  function closeEdit() {
+    setEditingProduct(null)
+    setEditForm(EMPTY_EDIT)
+  }
 
   async function handleGenerateBarcode() {
     try { setField('barcode', await generateBarcode()) }
@@ -54,6 +74,26 @@ export default function AdminConsole() {
       showToast(err?.response?.data?.detail ?? 'Failed to create product', 'error')
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  async function handleEditSave(e) {
+    e.preventDefault()
+    if (!editForm.name) return
+    setEditSubmitting(true)
+    try {
+      await updateProduct(editingProduct.id, {
+        name: editForm.name,
+        description: editForm.description || null,
+        base_price: editForm.base_price ? parseFloat(editForm.base_price) : null,
+      })
+      showToast(`"${editForm.name}" updated`, 'success')
+      closeEdit()
+      load()
+    } catch (err) {
+      showToast(err?.response?.data?.detail ?? 'Failed to update product', 'error')
+    } finally {
+      setEditSubmitting(false)
     }
   }
 
@@ -94,7 +134,7 @@ export default function AdminConsole() {
               Manage Users
             </button>
             <button
-              onClick={() => setShowForm((v) => !v)}
+              onClick={() => { setShowForm((v) => !v); closeEdit() }}
               className="bg-primary text-on-primary px-4 py-2 rounded-xl font-semibold text-sm min-h-[48px] active:scale-95 transition-transform"
             >
               {showForm ? 'Cancel' : '+ Add Product'}
@@ -135,6 +175,28 @@ export default function AdminConsole() {
           </form>
         )}
 
+        {/* Edit Product form */}
+        {editingProduct && (
+          <form onSubmit={handleEditSave} className="bg-surface-variant rounded-2xl p-5 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-semibold text-on-surface">Edit Product</h2>
+              <button type="button" onClick={closeEdit}
+                className="text-sm text-on-surface-variant hover:text-on-surface transition-colors">
+                Cancel
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Field label="Name *" value={editForm.name} onChange={(v) => setEditField('name', v)} placeholder="Product name" required />
+              <Field label="Description" value={editForm.description} onChange={(v) => setEditField('description', v)} placeholder="Optional" />
+              <Field label="Base Price (Rp)" value={editForm.base_price} onChange={(v) => setEditField('base_price', v)} placeholder="0" inputMode="decimal" />
+            </div>
+            <button type="submit" disabled={editSubmitting}
+              className="w-full md:w-auto md:px-8 bg-primary text-on-primary font-semibold py-3 rounded-xl min-h-[48px] active:scale-95 transition-transform disabled:opacity-60 mt-4">
+              {editSubmitting ? 'Saving…' : 'Save Changes'}
+            </button>
+          </form>
+        )}
+
         {/* Search */}
         <input type="search" placeholder="Search products…" value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -152,7 +214,9 @@ export default function AdminConsole() {
             <div className="flex flex-col gap-2 md:hidden pb-4">
               {filtered.map((p) => (
                 <MobileProductRow key={p.id} product={p}
+                  isEditing={editingProduct?.id === p.id}
                   onView={() => navigate(`/product/${p.id}`, { state: { product: p } })}
+                  onEdit={() => openEdit(p)}
                   onArchive={() => handleArchive(p)}
                   onUnarchive={() => handleUnarchive(p)} />
               ))}
@@ -174,7 +238,7 @@ export default function AdminConsole() {
                 <tbody>
                   {filtered.map((p, i) => (
                     <tr key={p.id}
-                      className={`${p.is_archived ? 'opacity-50' : ''} ${i !== filtered.length - 1 ? 'border-b border-surface-variant' : ''}`}>
+                      className={`${p.is_archived ? 'opacity-50' : ''} ${editingProduct?.id === p.id ? 'bg-primary-container/20' : ''} ${i !== filtered.length - 1 ? 'border-b border-surface-variant' : ''}`}>
                       <td className="px-4 py-3">
                         <button className="text-left hover:text-primary transition-colors"
                           onClick={() => navigate(`/product/${p.id}`, { state: { product: p } })}>
@@ -199,17 +263,23 @@ export default function AdminConsole() {
                         )}
                       </td>
                       <td className="px-4 py-3 text-right">
-                        {p.is_archived ? (
-                          <button onClick={() => handleUnarchive(p)}
-                            className="text-xs text-primary border border-primary rounded-lg px-3 py-1.5 hover:bg-primary-container transition-colors">
-                            Restore
+                        <div className="flex items-center justify-end gap-2">
+                          <button onClick={() => openEdit(p)}
+                            className="text-xs text-on-surface-variant border border-outline rounded-lg px-3 py-1.5 hover:bg-surface-variant transition-colors">
+                            Edit
                           </button>
-                        ) : (
-                          <button onClick={() => handleArchive(p)}
-                            className="text-xs text-error border border-error rounded-lg px-3 py-1.5 hover:bg-error-container transition-colors">
-                            Archive
-                          </button>
-                        )}
+                          {p.is_archived ? (
+                            <button onClick={() => handleUnarchive(p)}
+                              className="text-xs text-primary border border-primary rounded-lg px-3 py-1.5 hover:bg-primary-container transition-colors">
+                              Restore
+                            </button>
+                          ) : (
+                            <button onClick={() => handleArchive(p)}
+                              className="text-xs text-error border border-error rounded-lg px-3 py-1.5 hover:bg-error-container transition-colors">
+                              Archive
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -223,10 +293,10 @@ export default function AdminConsole() {
   )
 }
 
-function MobileProductRow({ product: p, onView, onArchive, onUnarchive }) {
+function MobileProductRow({ product: p, isEditing, onView, onEdit, onArchive, onUnarchive }) {
   return (
     <div className={`bg-surface border rounded-xl p-3 flex items-center justify-between gap-2
-      ${p.is_archived ? 'border-outline opacity-50' : 'border-surface-variant'}`}>
+      ${isEditing ? 'border-primary' : p.is_archived ? 'border-outline opacity-50' : 'border-surface-variant'}`}>
       <button className="flex-1 text-left min-w-0" onClick={onView}>
         <p className="font-medium text-on-surface text-sm truncate">{p.name}</p>
         <p className="text-xs text-on-surface-variant font-mono">{p.barcode}</p>
@@ -235,17 +305,23 @@ function MobileProductRow({ product: p, onView, onArchive, onUnarchive }) {
           {p.is_archived && <span className="ml-2 text-outline">[archived]</span>}
         </p>
       </button>
-      {p.is_archived ? (
-        <button onClick={onUnarchive}
-          className="text-xs text-primary border border-primary rounded-lg px-2 py-1 min-h-[40px] min-w-[60px] active:bg-primary-container">
-          Restore
+      <div className="flex gap-1.5">
+        <button onClick={onEdit}
+          className="text-xs text-on-surface-variant border border-outline rounded-lg px-2 py-1 min-h-[40px] min-w-[44px] active:bg-surface-variant">
+          Edit
         </button>
-      ) : (
-        <button onClick={onArchive}
-          className="text-xs text-error border border-error rounded-lg px-2 py-1 min-h-[40px] min-w-[60px] active:bg-error-container">
-          Archive
-        </button>
-      )}
+        {p.is_archived ? (
+          <button onClick={onUnarchive}
+            className="text-xs text-primary border border-primary rounded-lg px-2 py-1 min-h-[40px] min-w-[60px] active:bg-primary-container">
+            Restore
+          </button>
+        ) : (
+          <button onClick={onArchive}
+            className="text-xs text-error border border-error rounded-lg px-2 py-1 min-h-[40px] min-w-[60px] active:bg-error-container">
+            Archive
+          </button>
+        )}
+      </div>
     </div>
   )
 }
