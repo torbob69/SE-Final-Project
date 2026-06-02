@@ -21,7 +21,7 @@ app.include_router(checkout.router)
 app.include_router(analytics.router)
 
 
-@app.get("/health")
+@app.get("/test")
 def health():
     return {"status": "ok"}
 
