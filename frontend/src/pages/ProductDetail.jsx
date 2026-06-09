@@ -6,6 +6,7 @@ import { listTransactions } from '../api/transactions'
 import { useToast } from '../context/ToastContext'
 import { useAuth } from '../context/AuthContext'
 import Layout from '../components/Layout'
+import { ArrowLeft, AlertTriangle } from 'lucide-react'
 
 export default function ProductDetail() {
   const { id } = useParams()
@@ -87,10 +88,8 @@ export default function ProductDetail() {
     <Layout>
       <div className="px-4 md:px-8 pt-6 md:pt-8">
         <div className="flex items-center gap-3 mb-6">
-          <button onClick={() => navigate(-1)} className="min-w-[48px] min-h-[48px] flex items-center justify-center rounded-full hover:bg-surface-variant active:bg-surface-variant">
-            <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-on-surface">
-              <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
-            </svg>
+          <button onClick={() => navigate(-1)} className="min-w-[48px] min-h-[48px] flex items-center justify-center hover:bg-surface-variant active:bg-surface-variant">
+            <ArrowLeft className="w-6 h-6 text-on-surface" />
           </button>
           <h1 className="text-xl font-bold text-on-surface">Product Detail</h1>
         </div>
@@ -121,9 +120,9 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            {/* Transaction history — admin only, desktop visible here */}
+            {/* Transaction history — admin only */}
             {isAdmin && (
-              <div className="bg-surface border border-surface-variant rounded-2xl p-4">
+              <div className="bg-surface border border-outline p-4">
                 <h3 className="font-semibold text-on-surface text-sm mb-3">Recent Adjustments</h3>
                 {txLoading ? (
                   <div className="flex justify-center py-4">
@@ -134,7 +133,7 @@ export default function ProductDetail() {
                 ) : (
                   <div className="flex flex-col gap-2 max-h-56 overflow-y-auto">
                     {txs.map((tx) => (
-                      <div key={tx.id} className="flex items-center justify-between text-xs py-1 border-b border-surface-variant last:border-0">
+                      <div key={tx.id} className="flex items-center justify-between text-xs py-1 border-b border-outline last:border-0">
                         <span className="text-on-surface-variant">
                           {new Date(tx.timestamp).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' })}
                         </span>
@@ -151,7 +150,7 @@ export default function ProductDetail() {
           </div>
 
           {/* Right — adjustment controls */}
-          <div className="bg-surface border border-surface-variant rounded-2xl p-5 h-fit">
+          <div className="bg-surface border border-outline p-5 h-fit">
             <p className="font-semibold text-on-surface mb-4">Adjust Stock</p>
             <div className="flex items-center gap-4 justify-center mb-4">
               <button
@@ -202,7 +201,10 @@ export default function ProductDetail() {
             </button>
 
             {product.stock === 0 && delta === 0 && (
-              <p className="text-xs text-error text-center mt-3">⚠ This product is out of stock</p>
+              <p className="text-xs text-error text-center mt-3 flex items-center justify-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                This product is out of stock
+              </p>
             )}
           </div>
         </div>

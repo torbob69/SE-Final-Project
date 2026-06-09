@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback } from 'react'
+import { Check, X } from 'lucide-react'
 
 const ToastContext = createContext(null)
 
@@ -33,7 +34,9 @@ function ToastContainer({ toasts }) {
               ? 'bg-success text-on-success'
               : 'bg-error text-on-error'}`}
         >
-          <span>{t.type === 'success' ? '✓' : '✕'}</span>
+          {t.type === 'success'
+            ? <Check className="w-4 h-4 shrink-0" />
+            : <X className="w-4 h-4 shrink-0" />}
           <span>{t.message}</span>
         </div>
       ))}

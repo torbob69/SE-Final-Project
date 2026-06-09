@@ -1,41 +1,42 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
-  /* MD3 colour roles — blue primary palette */
-  --color-primary: #1d4ed8;
+  /* Apple design system */
+  --color-primary: #0071e3;
   --color-on-primary: #ffffff;
-  --color-primary-container: #dbeafe;
-  --color-on-primary-container: #1e3a8a;
+  --color-primary-container: #e8f1fd;
+  --color-on-primary-container: #0058b3;
 
-  --color-secondary: #0891b2;
+  --color-secondary: #6e6e73;
   --color-on-secondary: #ffffff;
 
-  --color-surface: #f8fafc;
-  --color-on-surface: #0f172a;
-  --color-surface-variant: #e2e8f0;
-  --color-on-surface-variant: #475569;
+  --color-surface: #ffffff;
+  --color-on-surface: #1d1d1f;
+  --color-surface-variant: #f5f5f7;
+  --color-on-surface-variant: #6e6e73;
 
-  --color-error: #dc2626;
+  /* Apple system alert colors */
+  --color-error: #ff3b30;
   --color-on-error: #ffffff;
-  --color-error-container: #fee2e2;
-  --color-on-error-container: #7f1d1d;
+  --color-error-container: #fff2f2;
+  --color-on-error-container: #cc0000;
 
-  --color-success: #16a34a;
+  --color-success: #34c759;
   --color-on-success: #ffffff;
-  --color-success-container: #dcfce7;
+  --color-success-container: #edfaf1;
 
-  --color-warning: #d97706;
-  --color-warning-container: #fef3c7;
+  --color-warning: #ff9500;
+  --color-warning-container: #fff8ec;
 
-  --color-outline: #94a3b8;
+  --color-outline: #d2d2d7;
   --color-background: #ffffff;
-  --color-on-background: #0f172a;
+  --color-on-background: #1d1d1f;
 
-  /* Typography scale */
-  --font-sans: 'Inter', 'Roboto', system-ui, sans-serif;
+  /* SF Pro on Apple devices, clean fallback elsewhere */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", "Helvetica Neue", Arial, sans-serif;
 
-  /* Touch-safe minimum */
-  --spacing-touch: 3rem; /* 48px */
+  --spacing-touch: 3rem;
 }
 
 * {
@@ -47,9 +48,10 @@ body {
   background-color: var(--color-background);
   color: var(--color-on-background);
   overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Prevent iOS bounce on fixed overlays */
 .no-scroll {
   overflow: hidden;
   position: fixed;

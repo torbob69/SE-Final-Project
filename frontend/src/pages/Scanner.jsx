@@ -6,6 +6,7 @@ import { getByBarcode } from '../api/products'
 import { useToast } from '../context/ToastContext'
 import { useCart } from '../context/CartContext'
 import Layout from '../components/Layout'
+import { ArrowLeft, ShoppingCart } from 'lucide-react'
 
 const MODES = ['Inventory', 'Cashier']
 
@@ -53,9 +54,6 @@ export default function Scanner() {
   useEffect(() => {
     if (!videoRef.current) return
 
-    // Closure-local state — each effect invocation owns its own reader.
-    // This is the correct pattern for StrictMode (dev double-invoke) and
-    // for Cashier mode rescans (scanKey bumps trigger new effect + cleanup).
     let controls = null
     let stopped = false
 
@@ -72,7 +70,6 @@ export default function Scanner() {
 
     reader
       .decodeFromConstraints(
-        // ideal: 'environment' → rear camera on mobile, graceful webcam fallback on desktop
         { video: { facingMode: { ideal: 'environment' } } },
         videoRef.current,
         (result, err) => {
@@ -83,14 +80,12 @@ export default function Scanner() {
             handleBarcode(result.getText())
             return
           }
-          // NotFoundException fires every frame when no barcode is visible — that's normal
           if (err && !(err instanceof NotFoundException)) {
             console.warn('[Scanner] decode error:', err)
           }
         }
       )
       .then((c) => {
-        // If cleanup already ran while the promise was awaiting, stop immediately
         controls = c
         if (stopped) c.stop()
         else console.log('[Scanner] ready — pointing at a barcode now')
@@ -111,10 +106,8 @@ export default function Scanner() {
         {/* Header */}
         <div className="px-4 pt-5 pb-3 flex items-center justify-between gap-3 bg-surface">
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate(-1)} className="min-w-[48px] min-h-[48px] flex items-center justify-center rounded-full hover:bg-surface-variant active:bg-surface-variant">
-              <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-on-surface">
-                <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
-              </svg>
+            <button onClick={() => navigate(-1)} className="min-w-[48px] min-h-[48px] flex items-center justify-center hover:bg-surface-variant active:bg-surface-variant">
+              <ArrowLeft className="w-6 h-6 text-on-surface" />
             </button>
             <h1 className="text-xl font-bold text-on-surface">Scan Barcode</h1>
           </div>
@@ -143,8 +136,11 @@ export default function Scanner() {
             className="mx-4 mb-2 bg-primary-container text-on-primary-container rounded-xl px-4 py-2.5
               flex items-center justify-between text-sm font-medium active:scale-95 transition-transform"
           >
-            <span>🛒 {itemCount} item{itemCount !== 1 ? 's' : ''} in cart</span>
-            <span className="text-primary font-semibold">View Cart →</span>
+            <span className="flex items-center gap-2">
+              <ShoppingCart className="w-4 h-4" />
+              {itemCount} item{itemCount !== 1 ? 's' : ''} in cart
+            </span>
+            <span className="text-primary font-semibold">View Cart</span>
           </button>
         )}
 
@@ -153,7 +149,7 @@ export default function Scanner() {
           <video ref={videoRef} className="absolute inset-0 w-full h-full object-cover" playsInline muted />
 
           {/* Targeting reticle */}
-          <div className="absolute inset-0 flex items-center justify-center">
+          {/* <div className="absolute inset-0 flex items-center justify-center">
             <div className="w-64 h-40 relative">
               {['top-0 left-0', 'top-0 right-0 rotate-90', 'bottom-0 right-0 rotate-180', 'bottom-0 left-0 -rotate-90'].map((pos, i) => (
                 <div key={i} className={`absolute ${pos} w-8 h-8`}>
@@ -165,12 +161,12 @@ export default function Scanner() {
                 <div className="absolute inset-x-0 top-0 h-0.5 bg-primary animate-bounce" style={{ animationDuration: '1s' }} />
               )}
             </div>
-          </div>
+          </div> */}
 
           {/* Mode label overlay */}
           <div className={`absolute top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-semibold
             ${mode === 'Cashier' ? 'bg-primary text-on-primary' : 'bg-black/50 text-white'}`}>
-            {mode === 'Cashier' ? '🛒 Cashier Mode' : '📦 Inventory Mode'}
+            {mode === 'Cashier' ? 'Cashier Mode' : 'Inventory Mode'}
           </div>
 
           {cameraError && (
