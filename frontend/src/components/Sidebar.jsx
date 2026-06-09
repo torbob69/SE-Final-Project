@@ -24,16 +24,15 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="hidden md:flex flex-col fixed left-0 top-0 h-screen w-60 bg-surface border-r border-outline z-40">
+    <aside className="hidden md:flex flex-col fixed left-0 top-0 h-screen w-60 bg-surface z-40">
       {/* Brand */}
-      <div className="px-5 py-5 border-b border-outline">
+      <div className="px-5 py-5">
         <p className="text-lg font-semibold text-on-surface">StockSync</p>
         <p className="text-xs text-on-surface-variant mt-0.5">Inventory Management</p>
       </div>
 
       {/* Nav */}
       <nav className="flex-1 px-2 py-4 flex flex-col gap-0.5 overflow-y-auto">
-        <p className="text-xs font-medium text-on-surface-variant px-3 mb-1">Menu</p>
         {NAV.map((item) => (
           <SidebarLink key={item.to} {...item} />
         ))}
@@ -49,7 +48,7 @@ export default function Sidebar() {
       </nav>
 
       {/* User footer */}
-      <div className="px-4 py-4 border-t border-outline">
+      <div className="px-4 py-4">
         <div className="flex items-center gap-3 mb-3">
           <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0">
             <span className="text-xs font-semibold text-on-primary">
