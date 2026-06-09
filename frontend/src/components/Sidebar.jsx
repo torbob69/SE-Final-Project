@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { Home, ScanLine, LayoutList, Package, Users, BarChart2 } from 'lucide-react'
+import logo from '../assets/logo.png'
 
 const NAV = [
   { to: '/dashboard', label: 'Home', icon: <Home className="w-4 h-4 shrink-0" /> },
@@ -27,8 +28,7 @@ export default function Sidebar() {
     <aside className="hidden md:flex flex-col fixed left-0 top-0 h-screen w-60 bg-surface z-40">
       {/* Brand */}
       <div className="px-5 py-5">
-        <p className="text-lg font-semibold text-on-surface">StockSync</p>
-        <p className="text-xs text-on-surface-variant mt-0.5">Inventory Management</p>
+        <img src={logo} alt="StockSync" className="h-12 w-auto" />
       </div>
 
       {/* Nav */}

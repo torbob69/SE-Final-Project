@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
+import logo from '../assets/logo.png'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -28,7 +29,7 @@ export default function Login() {
   return (
     <div className="min-h-screen flex">
       {/* Desktop hero panel */}
-      <div className="hidden md:flex flex-col justify-between w-2/5 bg-[#1d1d1f] px-12 py-10">
+      <div className="hidden md:flex flex-col justify-between w-2/5 bg-neutral-900 px-12 py-10">
         <div>
           <p className="text-white text-xl font-semibold">StockSync</p>
         </div>
@@ -57,17 +58,16 @@ export default function Login() {
       </div>
 
       {/* Form panel */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-10 bg-surface-variant">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-10 bg-surface">
         {/* Mobile brand */}
         <div className="md:hidden mb-8 text-center">
-          <h1 className="text-3xl font-bold text-on-background">StockSync</h1>
-          <p className="text-on-surface-variant mt-1 text-sm">Inventory Management</p>
+          <img src={logo} alt=""  className='w-48'/>
         </div>
 
-        <div className="w-full max-w-sm bg-surface rounded-2xl shadow-sm px-8 py-10">
+        <div className="w-full max-w-sm bg-surface px-8 py-10">
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-on-background">Sign in</h1>
-            <p className="text-on-surface-variant text-sm mt-1">to your StockSync account</p>
+            <p className="text-on-surface-variant text-xs mt-1 font-extralight">to your StockSync account</p>
           </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -80,7 +80,7 @@ export default function Login() {
                 required
                 autoComplete="email"
                 placeholder="you@example.com"
-                className="w-full px-4 py-3 rounded-xl border border-outline bg-surface text-on-surface
+                className="w-full px-4 py-3 rounded-full border border-outline bg-surface text-on-surface
                   focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary
                   text-sm min-h-[48px] transition-all"
               />
@@ -95,7 +95,7 @@ export default function Login() {
                 required
                 autoComplete="current-password"
                 placeholder="••••••••"
-                className="w-full px-4 py-3 rounded-xl border border-outline bg-surface text-on-surface
+                className="w-full px-4 py-3 rounded-full border border-outline bg-surface text-on-surface
                   focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary
                   text-sm min-h-[48px] transition-all"
               />
