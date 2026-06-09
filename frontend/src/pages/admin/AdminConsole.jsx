@@ -200,7 +200,7 @@ export default function AdminConsole() {
         {/* Search */}
         <input type="search" placeholder="Search products…" value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full md:max-w-sm px-4 py-3 rounded-xl border border-outline bg-surface text-on-surface
+          className="w-full md:max-w-sm px-4 py-3 rounded-full border border-outline bg-surface text-on-surface
             focus:outline-none focus:border-primary mb-4 min-h-[48px]"
         />
 

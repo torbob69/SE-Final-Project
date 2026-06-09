@@ -50,11 +50,6 @@ export default function Sidebar() {
       {/* User footer */}
       <div className="px-4 py-4">
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0">
-            <span className="text-xs font-semibold text-on-primary">
-              {user?.email?.[0]?.toUpperCase() ?? '?'}
-            </span>
-          </div>
           <div className="min-w-0 flex-1">
             <p className="text-xs font-medium text-on-surface truncate">{user?.email}</p>
             <p className="text-[11px] text-on-surface-variant capitalize">{user?.role}</p>
@@ -80,8 +75,8 @@ function SidebarLink({ to, label, icon }) {
       className={({ isActive }) =>
         `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors
         ${isActive
-          ? 'bg-primary/10 text-primary'
-          : 'text-on-surface-variant hover:bg-surface-variant hover:text-on-surface'}`
+          ? 'text-primary'
+          : 'text-on-surface-variant hover:text-on-surface'}`
       }
     >
       {icon}
