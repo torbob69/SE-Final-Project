@@ -105,22 +105,22 @@ export default function Scanner() {
       <div className="flex flex-col h-[calc(100vh-5rem)]">
         {/* Header */}
         <div className="px-4 pt-5 pb-3 flex items-center justify-between gap-3 bg-surface">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <button onClick={() => navigate(-1)} className="min-w-[48px] min-h-[48px] flex items-center justify-center hover:bg-surface-variant active:bg-surface-variant">
               <ArrowLeft className="w-6 h-6 text-on-surface" />
             </button>
-            <h1 className="text-xl font-bold text-on-surface">Scan Barcode</h1>
+            <h1 className="text-md font-semibold text-on-surface">Scan Barcode</h1>
           </div>
 
           {/* Mode toggle */}
-          <div className="flex bg-surface-variant rounded-xl p-0.5 gap-0.5">
+          <div className="flexrounded-xl p-0.5 gap-0.5">
             {MODES.map((m) => (
               <button
                 key={m}
                 onClick={() => setMode(m)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors min-h-[36px]
+                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors min-h-[36px]
                   ${mode === m
-                    ? 'bg-primary text-on-primary shadow-sm'
+                    ? 'bg-primary text-on-primary'
                     : 'text-on-surface-variant hover:text-on-surface'}`}
               >
                 {m}
@@ -183,10 +183,8 @@ export default function Scanner() {
         </div>
 
         <div className="px-4 pt-3 pb-4 bg-surface space-y-2">
-          <p className="text-xs text-center text-on-surface-variant">
-            {scanning
-              ? mode === 'Cashier' ? 'Scan item to add to cart…' : 'Point camera at a barcode…'
-              : 'Initializing camera…'}
+          <p className="text-xs text-center font-extralight text-on-surface-variant mb-4">
+            Problem with Scanner? Use manual input instead
           </p>
 
           {/* Manual barcode entry fallback */}
@@ -196,13 +194,13 @@ export default function Scanner() {
               value={manualInput}
               onChange={(e) => setManualInput(e.target.value)}
               placeholder="Enter barcode manually…"
-              className="flex-1 bg-surface-variant text-on-surface rounded-xl px-4 py-2.5 text-sm
+              className="flex-1 bg-surface-variant text-on-surface rounded-full px-4 py-2.5 text-sm
                 placeholder:text-on-surface-variant/50 outline-none focus:ring-2 focus:ring-primary min-h-[48px]"
             />
             <button
               type="submit"
               disabled={!manualInput.trim() || isLookingUp}
-              className="bg-primary text-on-primary px-4 rounded-xl font-semibold text-sm min-h-[48px]
+              className="text-primary px-4 text-sm min-h-[48px]
                 disabled:opacity-40 active:scale-95 transition-transform"
             >
               {isLookingUp ? '…' : 'Go'}
