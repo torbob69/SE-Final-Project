@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { listProducts, createProduct, updateProduct, archiveProduct, generateBarcode } from '../../api/products'
 import { useToast } from '../../context/ToastContext'
 import Layout from '../../components/Layout'
+import { X } from 'lucide-react'
 
 const EMPTY_FORM = { name: '', description: '', base_price: '', stock: '0', barcode: '' }
-const EMPTY_EDIT = { name: '', description: '', base_price: '' }
 
 export default function AdminConsole() {
   const [products, setProducts] = useState([])
@@ -14,9 +14,7 @@ export default function AdminConsole() {
   const [form, setForm] = useState(EMPTY_FORM)
   const [submitting, setSubmitting] = useState(false)
   const [search, setSearch] = useState('')
-  const [editingProduct, setEditingProduct] = useState(null)
-  const [editForm, setEditForm] = useState(EMPTY_EDIT)
-  const [editSubmitting, setEditSubmitting] = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState(null)
   const { showToast } = useToast()
   const navigate = useNavigate()
 
@@ -32,22 +30,6 @@ export default function AdminConsole() {
   )
 
   function setField(key, val) { setForm((prev) => ({ ...prev, [key]: val })) }
-  function setEditField(key, val) { setEditForm((prev) => ({ ...prev, [key]: val })) }
-
-  function openEdit(product) {
-    setEditingProduct(product)
-    setEditForm({
-      name: product.name,
-      description: product.description ?? '',
-      base_price: product.base_price != null ? String(product.base_price) : '',
-    })
-    setShowForm(false)
-  }
-
-  function closeEdit() {
-    setEditingProduct(null)
-    setEditForm(EMPTY_EDIT)
-  }
 
   async function handleGenerateBarcode() {
     try { setField('barcode', await generateBarcode()) }
@@ -77,131 +59,82 @@ export default function AdminConsole() {
     }
   }
 
-  async function handleEditSave(e) {
-    e.preventDefault()
-    if (!editForm.name) return
-    setEditSubmitting(true)
-    try {
-      await updateProduct(editingProduct.id, {
-        name: editForm.name,
-        description: editForm.description || null,
-        base_price: editForm.base_price ? parseFloat(editForm.base_price) : null,
-      })
-      showToast(`"${editForm.name}" updated`, 'success')
-      closeEdit()
-      load()
-    } catch (err) {
-      showToast(err?.response?.data?.detail ?? 'Failed to update product', 'error')
-    } finally {
-      setEditSubmitting(false)
-    }
-  }
-
-  async function handleArchive(product) {
-    try {
-      await archiveProduct(product.id)
-      showToast(`"${product.name}" archived`, 'success')
-      load()
-    } catch {
-      showToast('Failed to archive product', 'error')
-    }
-  }
-
-  async function handleUnarchive(product) {
-    try {
-      await updateProduct(product.id, { is_archived: false })
-      showToast(`"${product.name}" restored`, 'success')
-      load()
-    } catch {
-      showToast('Failed to restore product', 'error')
-    }
-  }
-
   return (
     <Layout>
       <div className="px-4 md:px-8 pt-6 md:pt-8">
+
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-6">
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-on-surface">Admin Console</h1>
-            <p className="text-sm text-on-surface-variant mt-0.5">{products.length} products total</p>
+            <h1 className="text-lg font-bold text-on-surface">Product Management</h1>
+            <p className="text-sm text-on-surface-variant mt-0.5">{products.length} products</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-5">
             <button
               onClick={() => navigate('/admin/users')}
-              className="text-sm font-medium text-primary border border-primary rounded-xl px-4 py-2 min-h-[48px] active:bg-primary-container"
+              className="text-sm text-primary active:opacity-60 transition-opacity"
             >
-              Manage Users
+              Users
             </button>
             <button
-              onClick={() => { setShowForm((v) => !v); closeEdit() }}
-              className="bg-primary text-on-primary px-4 py-2 rounded-xl font-semibold text-sm min-h-[48px] active:scale-95 transition-transform"
+              onClick={() => setShowForm((v) => !v)}
+              className="text-sm text-on-surface active:opacity-60 transition-opacity"
             >
-              {showForm ? 'Cancel' : '+ Add Product'}
+              {showForm ? 'Cancel' : '+ Add'}
             </button>
           </div>
         </div>
 
         {/* Add Product form */}
         {showForm && (
-          <form onSubmit={handleSubmit} className="bg-surface-variant rounded-2xl p-5 mb-6">
-            <h2 className="font-semibold text-on-surface mb-4">New Product</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit} className="border-t border-outline pt-5 pb-6 mb-2">
+            <p className="text-xs text-on-surface-variant mb-5">New Product</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
               <Field label="Name *" value={form.name} onChange={(v) => setField('name', v)} placeholder="Product name" required />
               <Field label="Description" value={form.description} onChange={(v) => setField('description', v)} placeholder="Optional" />
               <Field label="Base Price (Rp)" value={form.base_price} onChange={(v) => setField('base_price', v)} placeholder="0" inputMode="decimal" />
               <Field label="Initial Stock" value={form.stock} onChange={(v) => setField('stock', v)} placeholder="0" inputMode="numeric" />
-              <div className="md:col-span-2 flex flex-col gap-1">
-                <label className="text-sm font-medium text-on-surface-variant">Barcode *</label>
-                <div className="flex gap-2">
+              <div className="md:col-span-2 flex flex-col gap-1.5">
+                <label className="text-xs text-on-surface-variant">Barcode *</label>
+                <div className="flex gap-3 items-end">
                   <input
                     value={form.barcode}
                     onChange={(e) => setField('barcode', e.target.value)}
                     placeholder="12-digit barcode"
                     required
-                    className="flex-1 px-3 py-2 rounded-xl border border-outline bg-surface text-on-surface focus:outline-none focus:border-primary text-sm min-h-[48px]"
+                    className="flex-1 py-2 border-b border-outline bg-transparent text-on-surface
+                      focus:outline-none focus:border-primary text-sm transition-colors
+                      placeholder:text-on-surface-variant/50"
                   />
-                  <button type="button" onClick={handleGenerateBarcode}
-                    className="px-4 py-2 rounded-xl bg-primary-container text-on-primary-container font-medium text-sm min-h-[48px] active:scale-95 transition-transform whitespace-nowrap">
+                  <button
+                    type="button"
+                    onClick={handleGenerateBarcode}
+                    className="text-xs text-primary active:opacity-60 transition-opacity whitespace-nowrap pb-2"
+                  >
                     Auto-generate
                   </button>
                 </div>
               </div>
             </div>
-            <button type="submit" disabled={submitting}
-              className="w-full md:w-auto md:px-8 bg-primary text-on-primary font-semibold py-3 rounded-xl min-h-[48px] active:scale-95 transition-transform disabled:opacity-60 mt-4">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="bg-primary text-on-primary font-medium text-sm py-2.5 px-6 rounded-full
+                min-h-[44px] active:opacity-80 transition-opacity disabled:opacity-40"
+            >
               {submitting ? 'Creating…' : 'Create Product'}
             </button>
           </form>
         )}
 
-        {/* Edit Product form */}
-        {editingProduct && (
-          <form onSubmit={handleEditSave} className="bg-surface-variant rounded-2xl p-5 mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold text-on-surface">Edit Product</h2>
-              <button type="button" onClick={closeEdit}
-                className="text-sm text-on-surface-variant hover:text-on-surface transition-colors">
-                Cancel
-              </button>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Field label="Name *" value={editForm.name} onChange={(v) => setEditField('name', v)} placeholder="Product name" required />
-              <Field label="Description" value={editForm.description} onChange={(v) => setEditField('description', v)} placeholder="Optional" />
-              <Field label="Base Price (Rp)" value={editForm.base_price} onChange={(v) => setEditField('base_price', v)} placeholder="0" inputMode="decimal" />
-            </div>
-            <button type="submit" disabled={editSubmitting}
-              className="w-full md:w-auto md:px-8 bg-primary text-on-primary font-semibold py-3 rounded-xl min-h-[48px] active:scale-95 transition-transform disabled:opacity-60 mt-4">
-              {editSubmitting ? 'Saving…' : 'Save Changes'}
-            </button>
-          </form>
-        )}
-
         {/* Search */}
-        <input type="search" placeholder="Search products…" value={search}
+        <input
+          type="search"
+          placeholder="Search products…"
+          value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full md:max-w-sm px-4 py-3 rounded-full border border-outline bg-surface text-on-surface
-            focus:outline-none focus:border-primary mb-4 min-h-[48px]"
+            focus:outline-none focus:border-primary mb-4 md:mb-6 min-h-[48px]"
         />
 
         {loading ? (
@@ -211,128 +144,291 @@ export default function AdminConsole() {
         ) : (
           <>
             {/* Mobile: cards */}
-            <div className="flex flex-col gap-2 md:hidden pb-4">
+            <div className="flex flex-col gap-3 md:hidden pb-4">
               {filtered.map((p) => (
-                <MobileProductRow key={p.id} product={p}
-                  isEditing={editingProduct?.id === p.id}
-                  onView={() => navigate(`/product/${p.id}`, { state: { product: p } })}
-                  onEdit={() => openEdit(p)}
-                  onArchive={() => handleArchive(p)}
-                  onUnarchive={() => handleUnarchive(p)} />
+                <MobileProductRow
+                  key={p.id}
+                  product={p}
+                  onClick={() => setSelectedProduct(p)}
+                />
               ))}
             </div>
 
-            {/* Desktop: table */}
-            <div className="hidden md:block bg-surface border border-surface-variant rounded-2xl overflow-hidden mb-8">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-surface-variant bg-surface-variant/50">
-                    <th className="text-left px-4 py-3 font-semibold text-on-surface-variant">Product</th>
-                    <th className="text-left px-4 py-3 font-semibold text-on-surface-variant">Barcode</th>
-                    <th className="text-left px-4 py-3 font-semibold text-on-surface-variant">Price</th>
-                    <th className="text-right px-4 py-3 font-semibold text-on-surface-variant">Stock</th>
-                    <th className="text-center px-4 py-3 font-semibold text-on-surface-variant">Status</th>
-                    <th className="px-4 py-3" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((p, i) => (
-                    <tr key={p.id}
-                      className={`${p.is_archived ? 'opacity-50' : ''} ${editingProduct?.id === p.id ? 'bg-primary-container/20' : ''} ${i !== filtered.length - 1 ? 'border-b border-surface-variant' : ''}`}>
-                      <td className="px-4 py-3">
-                        <button className="text-left hover:text-primary transition-colors"
-                          onClick={() => navigate(`/product/${p.id}`, { state: { product: p } })}>
-                          <p className="font-medium text-on-surface">{p.name}</p>
-                          {p.description && <p className="text-xs text-on-surface-variant truncate max-w-xs">{p.description}</p>}
-                        </button>
-                      </td>
-                      <td className="px-4 py-3 font-mono text-xs text-on-surface-variant">{p.barcode}</td>
-                      <td className="px-4 py-3 text-on-surface">
-                        {p.base_price != null ? `Rp ${Number(p.base_price).toLocaleString('id-ID')}` : '—'}
-                      </td>
-                      <td className="px-4 py-3 text-right font-bold text-on-surface">{p.stock}</td>
-                      <td className="px-4 py-3 text-center">
-                        {p.is_archived ? (
-                          <span className="text-xs text-outline bg-surface-variant px-2 py-1 rounded-full">Archived</span>
-                        ) : p.stock === 0 ? (
-                          <span className="text-xs bg-error-container text-error px-2 py-1 rounded-full">Out</span>
-                        ) : p.stock <= 10 ? (
-                          <span className="text-xs bg-warning-container text-warning px-2 py-1 rounded-full">Low</span>
-                        ) : (
-                          <span className="text-xs bg-success-container text-success px-2 py-1 rounded-full">OK</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <button onClick={() => openEdit(p)}
-                            className="text-xs text-on-surface-variant border border-outline rounded-lg px-3 py-1.5 hover:bg-surface-variant transition-colors">
-                            Edit
-                          </button>
-                          {p.is_archived ? (
-                            <button onClick={() => handleUnarchive(p)}
-                              className="text-xs text-primary border border-primary rounded-lg px-3 py-1.5 hover:bg-primary-container transition-colors">
-                              Restore
-                            </button>
-                          ) : (
-                            <button onClick={() => handleArchive(p)}
-                              className="text-xs text-error border border-error rounded-lg px-3 py-1.5 hover:bg-error-container transition-colors">
-                              Archive
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            {/* Desktop: flex list */}
+            <div className="hidden md:block bg-surface overflow-hidden mb-8 text-sm">
+              <div className="flex items-center px-4 py-3 font-semibold text-on-surface-variant">
+                <span className="flex-[3]">Product</span>
+                <span className="flex-[2]">Barcode</span>
+                <span className="flex-[2]">Price</span>
+                <span className="flex-1 text-right">Stock</span>
+                <span className="flex-[1.5] text-center">Status</span>
+              </div>
+              {filtered.map((p, i) => (
+                <div
+                  key={p.id}
+                  onClick={() => setSelectedProduct(p)}
+                  className={`flex items-center px-4 py-3 border-y border-black/10 cursor-pointer transition-colors
+                    hover:bg-surface-variant/40
+                    ${p.is_archived ? 'opacity-50' : ''}
+                    ${i !== filtered.length - 1 ? 'border-y border-black/10' : ''}`}
+                >
+                  <div className="flex-[3] min-w-0 pr-3">
+                    <p className="font-medium text-on-surface truncate">{p.name}</p>
+                    {p.description && (
+                      <p className="text-xs text-on-surface-variant truncate">{p.description}</p>
+                    )}
+                  </div>
+                  <span className="flex-[2] font-mono text-on-surface-variant text-xs pr-3">{p.barcode}</span>
+                  <span className="flex-[2] text-on-surface pr-3">
+                    {p.base_price != null ? `Rp ${Number(p.base_price).toLocaleString('id-ID')}` : '—'}
+                  </span>
+                  <span className="flex-1 text-right font-semibold text-on-surface">{p.stock}</span>
+                  <span className="flex-[1.5] text-center">
+                    {p.is_archived ? (
+                      <span className="text-xs font-semibold text-on-surface-variant">Archived</span>
+                    ) : p.stock === 0 ? (
+                      <span className="text-xs font-semibold text-error">Out of Stock</span>
+                    ) : p.stock <= 10 ? (
+                      <span className="text-xs font-semibold text-warning">Low Stock</span>
+                    ) : (
+                      <span className="text-xs font-semibold text-success">In Stock</span>
+                    )}
+                  </span>
+                </div>
+              ))}
             </div>
           </>
         )}
       </div>
+
+      {selectedProduct && (
+        <AdminProductOverlay
+          product={selectedProduct}
+          onClose={() => setSelectedProduct(null)}
+          onSaved={() => { load(); setSelectedProduct(null) }}
+        />
+      )}
     </Layout>
   )
 }
 
-function MobileProductRow({ product: p, isEditing, onView, onEdit, onArchive, onUnarchive }) {
+function AdminProductOverlay({ product: initial, onClose, onSaved }) {
+  const { showToast } = useToast()
+  const [visible, setVisible] = useState(false)
+  const [product] = useState(initial)
+  const [editForm, setEditForm] = useState({
+    name: initial.name,
+    description: initial.description ?? '',
+    base_price: initial.base_price != null ? String(initial.base_price) : '',
+  })
+  const [submitting, setSubmitting] = useState(false)
+  const [archiving, setArchiving] = useState(false)
+
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setVisible(true))
+    return () => cancelAnimationFrame(raf)
+  }, [])
+
+  function close() {
+    setVisible(false)
+    setTimeout(onClose, 150)
+  }
+
+  function setField(key, val) {
+    setEditForm((prev) => ({ ...prev, [key]: val }))
+  }
+
+  async function handleSave(e) {
+    e.preventDefault()
+    if (!editForm.name) return
+    setSubmitting(true)
+    try {
+      await updateProduct(product.id, {
+        name: editForm.name,
+        description: editForm.description || null,
+        base_price: editForm.base_price ? parseFloat(editForm.base_price) : null,
+      })
+      showToast(`"${editForm.name}" updated`, 'success')
+      onSaved()
+    } catch (err) {
+      showToast(err?.response?.data?.detail ?? 'Failed to update product', 'error')
+      setSubmitting(false)
+    }
+  }
+
+  async function handleArchiveToggle() {
+    setArchiving(true)
+    try {
+      if (product.is_archived) {
+        await updateProduct(product.id, { is_archived: false })
+        showToast(`"${product.name}" restored`, 'success')
+      } else {
+        await archiveProduct(product.id)
+        showToast(`"${product.name}" archived`, 'success')
+      }
+      onSaved()
+    } catch {
+      showToast('Action failed', 'error')
+      setArchiving(false)
+    }
+  }
+
+  const statusCls = product.is_archived
+    ? 'text-on-surface-variant'
+    : product.stock === 0 ? 'text-error'
+    : product.stock <= 10 ? 'text-warning'
+    : 'text-success'
+
+  const statusLabel = product.is_archived
+    ? 'Archived'
+    : product.stock === 0 ? 'Out of Stock'
+    : product.stock <= 10 ? 'Low Stock'
+    : 'In Stock'
+
   return (
-    <div className={`bg-surface border rounded-xl p-3 flex items-center justify-between gap-2
-      ${isEditing ? 'border-primary' : p.is_archived ? 'border-outline opacity-50' : 'border-surface-variant'}`}>
-      <button className="flex-1 text-left min-w-0" onClick={onView}>
-        <p className="font-medium text-on-surface text-sm truncate">{p.name}</p>
-        <p className="text-xs text-on-surface-variant font-mono">{p.barcode}</p>
-        <p className="text-xs text-on-surface-variant mt-0.5">
-          Stock: <span className="font-semibold">{p.stock}</span>
-          {p.is_archived && <span className="ml-2 text-outline">[archived]</span>}
-        </p>
-      </button>
-      <div className="flex gap-1.5">
-        <button onClick={onEdit}
-          className="text-xs text-on-surface-variant border border-outline rounded-lg px-2 py-1 min-h-[40px] min-w-[44px] active:bg-surface-variant">
-          Edit
-        </button>
-        {p.is_archived ? (
-          <button onClick={onUnarchive}
-            className="text-xs text-primary border border-primary rounded-lg px-2 py-1 min-h-[40px] min-w-[60px] active:bg-primary-container">
-            Restore
+    <div
+      className={`fixed inset-0 z-50 flex items-end md:items-stretch md:justify-end backdrop-blur-sm bg-black/40
+        transition-opacity duration-150 ${visible ? 'opacity-100' : 'opacity-0'}`}
+      onClick={close}
+    >
+      <div
+        className={`bg-surface w-full md:w-[400px] rounded-t-2xl md:rounded-none
+          overflow-hidden flex flex-col max-h-[92vh] md:max-h-full md:h-full transition-transform duration-150
+          ${visible ? 'translate-y-0 md:translate-x-0' : 'translate-y-6 md:translate-y-0 md:translate-x-full'}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between px-5 pt-5 pb-4 shrink-0">
+          <div className="min-w-0">
+            <p className="text-xs font-mono text-on-surface-variant mb-0.5">{product.barcode}</p>
+            <h2 className="text-lg font-bold text-on-surface">{product.name}</h2>
+          </div>
+          <button
+            onClick={close}
+            className="text-on-surface-variant active:opacity-60 transition-opacity ml-4 mt-0.5 shrink-0"
+          >
+            <X className="w-5 h-5" />
           </button>
-        ) : (
-          <button onClick={onArchive}
-            className="text-xs text-error border border-error rounded-lg px-2 py-1 min-h-[40px] min-w-[60px] active:bg-error-container">
-            Archive
-          </button>
-        )}
+        </div>
+
+        {/* Body */}
+        <div className="overflow-y-auto flex-1 px-5 pb-6 flex flex-col gap-6">
+          {/* Price + Stock */}
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="text-xs text-on-surface-variant">Base Price</p>
+              <p className="font-semibold text-on-surface">
+                {product.base_price != null
+                  ? `Rp ${Number(product.base_price).toLocaleString('id-ID')}`
+                  : '—'}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-on-surface-variant">
+                Stock · <span className={statusCls}>{statusLabel}</span>
+              </p>
+              <p className="text-xl font-bold text-on-surface tabular-nums">{product.stock}</p>
+            </div>
+          </div>
+
+          {/* Edit form */}
+          <form onSubmit={handleSave} className="flex flex-col gap-5">
+            <p className="text-xs text-on-surface-variant -mb-1">Edit Details</p>
+            <Field
+              label="Name *"
+              value={editForm.name}
+              onChange={(v) => setField('name', v)}
+              placeholder="Product name"
+              required
+            />
+            <Field
+              label="Description"
+              value={editForm.description}
+              onChange={(v) => setField('description', v)}
+              placeholder="Optional"
+            />
+            <Field
+              label="Base Price (Rp)"
+              value={editForm.base_price}
+              onChange={(v) => setField('base_price', v)}
+              placeholder="0"
+              inputMode="decimal"
+            />
+
+            <div className="flex items-center gap-5 pt-1">
+              <button
+                type="submit"
+                disabled={submitting}
+                className="px-5 bg-primary text-on-primary py-3 rounded-full text-sm
+                  min-h-[48px] active:scale-95 transition-transform disabled:opacity-40"
+              >
+                {submitting ? 'Saving…' : 'Save Changes'}
+              </button>
+              <button
+                type="button"
+                onClick={handleArchiveToggle}
+                disabled={archiving}
+                className={`text-sm active:opacity-60 transition-opacity disabled:opacity-40
+                  ${product.is_archived ? 'text-primary' : 'text-error'}`}
+              >
+                {archiving ? '…' : product.is_archived ? 'Restore' : 'Archive'}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   )
 }
 
+function MobileProductRow({ product: p, onClick }) {
+  const statusCls = p.is_archived
+    ? 'text-on-surface-variant'
+    : p.stock === 0 ? 'text-error'
+    : p.stock <= 10 ? 'text-warning'
+    : 'text-success'
+  const statusLabel = p.is_archived
+    ? 'Archived'
+    : p.stock === 0 ? 'Out of Stock'
+    : p.stock <= 10 ? 'Low Stock'
+    : 'In Stock'
+
+  return (
+    <button
+      onClick={onClick}
+      className={`w-full text-left bg-surface p-4 active:bg-surface-variant transition-colors ${p.is_archived ? 'opacity-50' : ''}`}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-on-surface truncate">{p.name}</p>
+          <p className="text-xs text-on-surface-variant font-mono mt-0.5">{p.barcode}</p>
+        </div>
+        <span className={`text-xs font-semibold shrink-0 ${statusCls}`}>{statusLabel}</span>
+      </div>
+      <div className="flex items-center justify-between mt-3">
+        <span className="text-sm text-on-surface-variant">
+          {p.base_price != null ? `Rp ${Number(p.base_price).toLocaleString('id-ID')}` : '—'}
+        </span>
+        <span className="text-lg font-normal text-on-surface">
+          {p.stock} <span className="text-xs font-normal text-on-surface-variant">units</span>
+        </span>
+      </div>
+    </button>
+  )
+}
+
 function Field({ label, value, onChange, placeholder, required, inputMode }) {
   return (
-    <div className="flex flex-col gap-1">
-      <label className="text-sm font-medium text-on-surface-variant">{label}</label>
-      <input value={value} onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder} required={required} inputMode={inputMode}
-        className="px-3 py-2 rounded-xl border border-outline bg-surface text-on-surface focus:outline-none focus:border-primary text-sm min-h-[48px]"
+    <div className="flex flex-col gap-1.5">
+      <label className="text-xs text-on-surface-variant">{label}</label>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        required={required}
+        inputMode={inputMode}
+        className="py-2 border-b border-outline bg-transparent text-on-surface text-sm
+          focus:outline-none focus:border-primary transition-colors placeholder:text-on-surface-variant/50"
       />
     </div>
   )

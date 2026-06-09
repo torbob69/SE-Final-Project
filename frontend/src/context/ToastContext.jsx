@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, useCallback } from 'react'
-import { Check, X } from 'lucide-react'
 
 const ToastContext = createContext(null)
 
@@ -25,19 +24,15 @@ export function ToastProvider({ children }) {
 function ToastContainer({ toasts }) {
   if (!toasts.length) return null
   return (
-    <div className="fixed bottom-24 left-0 right-0 flex flex-col items-center gap-2 z-50 px-4 pointer-events-none">
+    <div className="fixed bottom-24 md:bottom-8 left-0 right-0 flex flex-col items-center gap-2 z-[60] px-4 pointer-events-none">
       {toasts.map((t) => (
         <div
           key={t.id}
-          className={`flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg text-sm font-medium w-full max-w-sm pointer-events-auto
-            ${t.type === 'success'
-              ? 'bg-success text-on-success'
-              : 'bg-error text-on-error'}`}
+          className="flex items-center gap-2.5 px-4 py-2.5 bg-on-surface text-surface rounded-full
+            text-sm font-medium max-w-xs w-fit pointer-events-auto"
         >
-          {t.type === 'success'
-            ? <Check className="w-4 h-4 shrink-0" />
-            : <X className="w-4 h-4 shrink-0" />}
-          <span>{t.message}</span>
+          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${t.type === 'success' ? 'bg-success' : 'bg-error'}`} />
+          <span className="leading-snug">{t.message}</span>
         </div>
       ))}
     </div>
